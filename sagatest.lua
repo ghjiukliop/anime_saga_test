@@ -230,6 +230,11 @@ InfoSection:AddParagraph({
     Title = "Người phát triển",
     Content = "Script được phát triển bởi Dương Tuấn và ghjiukliop"
 })
+-- Tạo tab Auto Play
+local AutoPlayTab = Window:AddTab({
+    Title = "Auto Play",
+    Icon = "rbxassetid://7734053495"
+})
 
 -- Thêm section thiết lập trong tab Settings
 local SettingsTab = Window:AddTab({
@@ -304,5 +309,33 @@ AutoSaveConfig()
 
 -- Thiết lập events
 setupSaveEvents()
+
+
+-- Thêm section Auto Play vào tab Auto Play
+local AutoPlaySection = AutoPlayTab:AddSection("Auto Play")
+
+-- Thêm nút bật/tắt Auto Play
+local autoPlayEnabled = false
+
+AutoPlaySection:AddToggle("AutoPlayToggle", {
+    Title = "Bật Auto Play",
+    Default = false,
+    Callback = function(Value)
+        autoPlayEnabled = Value
+        if autoPlayEnabled then
+            print("Auto Play đã bật!")
+            -- Thêm code auto play tại đây
+        else
+            print("Auto Play đã tắt!")
+            -- Thêm code dừng auto play tại đây
+        end
+    end
+})
+
+AutoPlaySection:AddParagraph({
+    Title = "Hướng dẫn",
+    Content = "Bật tính năng Auto Play để tự động thực hiện các thao tác trong game."
+})
+
 
 print("HT Hub | Anime Saga đã được tải thành công!")
