@@ -377,33 +377,7 @@ AutoPlaySection:AddToggle("AutoFollowEnemy", {
 })
 
 
-AutoPlaySection:AddToggle("AutoFollowEnemy", {
-    Title = "Auto Follow Enemy",
-    Default = false,
-    Callback = function(Value)
-        autoFollowEnemy = Value
-        if autoFollowEnemy then
-            followConnection = RunService.Heartbeat:Connect(function()
-                if character and humanoidRootPart then
-                    local nearestEnemy = findNearestEnemy()
-                    if nearestEnemy and nearestEnemy:FindFirstChild("HumanoidRootPart") then
-                        local enemyHRP = nearestEnemy.HumanoidRootPart
-                        local targetPos = enemyHRP.Position - Vector3.new(0, 7, 0)
-                        local lookDir = Vector3.new(0, 1, 0)
-                        character:PivotTo(CFrame.new(targetPos, targetPos + lookDir))
-                        camera.CameraSubject = humanoid
-                        camera.CameraType = Enum.CameraType.Custom
-                    end
-                end
-            end)
-        else
-            if followConnection then
-                followConnection:Disconnect()
-                followConnection = nil
-            end
-        end
-    end
-})
+
 
 -- ...existing code...
 
