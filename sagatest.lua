@@ -22,6 +22,10 @@ warn = function(...)
         originalWarn(...)
     end
 end
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
+local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+-- ...rest of your code...
 
 -- Tải thư viện Fluent
 local success, err = pcall(function()
