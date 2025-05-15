@@ -380,7 +380,7 @@ AutoPlaySection:AddToggle("AutoCombat", {
     end
 })
 
--- ...existing 
+-- ...existing code...
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
