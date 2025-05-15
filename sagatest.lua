@@ -471,8 +471,9 @@ end
 
 
 AutoPlaySection:AddParagraph({
-    Title = "Auto Skill"
-   
+    Title = "Auto Skill",
+    Content = "Auto use skills"
+
 })
 
 local autoSkill1 = false
