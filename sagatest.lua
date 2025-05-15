@@ -54,12 +54,15 @@ ConfigSystem.FileName = "AnimeSagaConfig_" .. game:GetService("Players").LocalPl
 ConfigSystem.DefaultConfig = {
     -- Các cài đặt mặc định
     UITheme = "Amethyst",
-    
-    -- Cài đặt log
     LogsEnabled = true,
     WarningsEnabled = true,
-    
-    -- Các cài đặt khác sẽ được thêm vào sau
+    -- Dán thêm các key trạng thái toggle ở đây
+    AutoPlayEnabled = false,
+    AutoFollowEnemy = false,
+    AutoCombat = false,
+    AutoSkill1 = false,
+    AutoSkill2 = false,
+    AutoSkill3 = false,
 }
 ConfigSystem.CurrentConfig = {}
 
@@ -550,7 +553,165 @@ AutoPlaySection:AddToggle("AutoSkill3", {
 
 
 
+-- load setting 
+AutoPlaySection:AddToggle("AutoPlayToggle", {
+    Title = "Bật Auto Play",
+    Default = ConfigSystem.CurrentConfig.AutoPlayEnabled,
+    Callback = function(Value)
+        autoPlayEnabled = Value
+        ConfigSystem.CurrentConfig.AutoPlayEnabled = Value
+        ConfigSystem.SaveConfig()
+        if autoPlayEnabled then
+            print("Auto Play đã bật!")
+        else
+            print("Auto Play đã tắt!")
+        end
+    end
+})
 
+AutoPlaySection:AddToggle("AutoFollowEnemy", {
+    Title = "Auto Follow Enemy",
+    Default = ConfigSystem.CurrentConfig.AutoFollowEnemy,
+    Callback = function(Value)
+        autoFollowEnemy = Value
+        ConfigSystem.CurrentConfig.AutoFollowEnemy = Value
+        ConfigSystem.SaveConfig()
+        if autoFollowEnemy then
+            followConnection = RunService.Heartbeat:Connect(function()
+                if character and humanoidRootPart then
+                    local nearestEnemy = findNearestEnemy()
+                    if nearestEnemy and nearestEnemy:FindFirstChild("HumanoidRootPart") then
+                        local enemyHRP = nearestEnemy.HumanoidRootPart
+                        local targetPos = enemyHRP.Position - Vector3.new(0, 7, 0)
+                        local lookDir = Vector3.new(0, 1, 0)
+                        character:PivotTo(CFrame.new(targetPos, targetPos + lookDir))
+                        camera.CameraSubject = humanoid
+                        camera.CameraType = Enum.CameraType.Custom
+                    end
+                end
+            end)
+        else
+            if followConnection then
+                followConnection:Disconnect()
+                followConnection = nil
+            end
+        end
+    end
+})
+
+AutoPlaySection:AddToggle("AutoCombat", {
+    Title = "Auto Combat",
+    Default = ConfigSystem.CurrentConfig.AutoCombat,
+    Callback = function(Value)
+        autoCombat = Value
+        ConfigSystem.CurrentConfig.AutoCombat = Value
+        ConfigSystem.SaveConfig()
+        if autoCombat then
+            combatThread = task.spawn(function()
+                repeat task.wait() until game:IsLoaded()
+                while autoCombat do
+                    local combatFunction = nil
+                    local env = getgc(true)
+                    for _, func in ipairs(env) do
+                        if typeof(func) == "function" and debug.getinfo(func).name == "Combat" then
+                            local constants = debug.getconstants(func)
+                            if table.find(constants, "Humanoid") and table.find(constants, "Slash") then
+                                combatFunction = func
+                                break
+                            end
+                        end
+                    end
+                    if combatFunction then
+                        pcall(combatFunction)
+                    end
+                    task.wait(0.2)
+                end
+            end)
+        else
+            if combatThread then
+                task.cancel(combatThread)
+            end
+        end
+    end
+})
+
+AutoPlaySection:AddToggle("AutoSkill1", {
+    Title = "Auto Skill 1",
+    Default = ConfigSystem.CurrentConfig.AutoSkill1,
+    Callback = function(Value)
+        autoSkill1 = Value
+        ConfigSystem.CurrentConfig.AutoSkill1 = Value
+        ConfigSystem.SaveConfig()
+        if autoSkill1 then
+            skill1Thread = task.spawn(function()
+                while autoSkill1 do
+                    local cf, pos = getPositionData()
+                    if cf and pos then
+                        local args = {"Skill1", cf, pos, "OnSkill"}
+                        ReplicatedStorage.Events.Skill:FireServer(unpack(args))
+                    end
+                    task.wait(5)
+                end
+            end)
+        else
+            if skill1Thread then
+                task.cancel(skill1Thread)
+            end
+        end
+    end
+})
+
+AutoPlaySection:AddToggle("AutoSkill2", {
+    Title = "Auto Skill 2",
+    Default = ConfigSystem.CurrentConfig.AutoSkill2,
+    Callback = function(Value)
+        autoSkill2 = Value
+        ConfigSystem.CurrentConfig.AutoSkill2 = Value
+        ConfigSystem.SaveConfig()
+        if autoSkill2 then
+            skill2Thread = task.spawn(function()
+                while autoSkill2 do
+                    local cf, pos = getPositionData()
+                    if cf and pos then
+                        local args = {"Skill2", cf, pos, "OnSkill"}
+                        ReplicatedStorage.Events.Skill:FireServer(unpack(args))
+                    end
+                    task.wait(7)
+                end
+            end)
+        else
+            if skill2Thread then
+                task.cancel(skill2Thread)
+            end
+        end
+    end
+})
+
+AutoPlaySection:AddToggle("AutoSkill3", {
+    Title = "Auto Skill 3",
+    Default = ConfigSystem.CurrentConfig.AutoSkill3,
+    Callback = function(Value)
+        autoSkill3 = Value
+        ConfigSystem.CurrentConfig.AutoSkill3 = Value
+        ConfigSystem.SaveConfig()
+        if autoSkill3 then
+            skill3Thread = task.spawn(function()
+                while autoSkill3 do
+                    local cf, pos = getPositionData()
+                    if cf and pos then
+                        local args = {"Skill3", cf, pos, "OnSkill"}
+                        ReplicatedStorage.Events.Skill:FireServer(unpack(args))
+                    end
+                    task.wait(10)
+                end
+            end)
+        else
+            if skill3Thread then
+                task.cancel(skill3Thread)
+            end
+        end
+    end
+})
 
 AutoPlaySection:AddParagraph({
     Title = "Hướng dẫn",
