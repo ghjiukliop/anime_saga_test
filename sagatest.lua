@@ -470,7 +470,11 @@ function getPositionData()
 end
 
 
--- Auto Skill 1
+AutoPlaySection:AddParagraph({
+    Title = "Auto Skill"
+   
+})
+
 local autoSkill1 = false
 local skill1Thread
 AutoPlaySection:AddToggle("AutoSkill1", {
