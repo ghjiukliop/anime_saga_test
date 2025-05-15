@@ -22,7 +22,8 @@ warn = function(...)
         originalWarn(...)
     end
 end
-
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 -- Tải thư viện Fluent
 local success, err = pcall(function()
     Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
@@ -450,8 +451,7 @@ AutoPlaySection:AddToggle("AutoCombat", {
 
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+
 
 function getPositionData()
     local char = LocalPlayer.Character
