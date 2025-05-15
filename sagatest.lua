@@ -338,22 +338,62 @@ AutoPlaySection:AddToggle("AutoPlayToggle", {
     end
 })
 
+-- ...existing code...
 
 local RunService = game:GetService("RunService")
 local camera = workspace.CurrentCamera
 
+local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+local humanoid = character:WaitForChild("Humanoid")
 
--- Auto Follow Enemy Toggle
-local autoFollowEnemy = ConfigSystem.CurrentConfig.AutoFollowEnemy
+LocalPlayer.CharacterAdded:Connect(function(char)
+    character = char
+    humanoidRootPart = nil
+    repeat wait() until char:FindFirstChild("HumanoidRootPart")
+    humanoidRootPart = char.HumanoidRootPart
+    humanoid = char:WaitForChild("Humanoid")
+    camera.CameraSubject = humanoid
+    camera.CameraType = Enum.CameraType.Custom
+end)
+
 local followConnection
+
+local function findNearestEnemy()
+    local mobsFolder = workspace:FindFirstChild("Enemy")
+    if not mobsFolder then return nil end
+    local mobs = mobsFolder:FindFirstChild("Mob")
+    if not mobs then return nil end
+
+    if not humanoidRootPart then return nil end
+
+    local nearestMob = nil
+    local nearestDistance = math.huge
+    for _, mob in pairs(mobs:GetChildren()) do
+        if mob:IsA("Model") and mob:FindFirstChild("HumanoidRootPart") then
+            local mobHRP = mob.HumanoidRootPart
+            local dist = (mobHRP.Position - humanoidRootPart.Position).Magnitude
+            if dist < nearestDistance then
+                nearestDistance = dist
+                nearestMob = mob
+            end
+        end
+    end
+    return nearestMob
+end
+
+-- Toggle AutoFollowEnemy trong Fluent UI
+local autoFollowEnemy = ConfigSystem.CurrentConfig.AutoFollowEnemy
 AutoPlaySection:AddToggle("AutoFollowEnemy", {
-    Title = "Auto Follow Enemy",
+    Title = "Auto TP Enemy",
     Default = ConfigSystem.CurrentConfig.AutoFollowEnemy,
     Callback = function(Value)
         autoFollowEnemy = Value
         ConfigSystem.CurrentConfig.AutoFollowEnemy = Value
         ConfigSystem.SaveConfig()
         if autoFollowEnemy then
+            camera.CameraSubject = humanoid
+            camera.CameraType = Enum.CameraType.Custom
             followConnection = RunService.Heartbeat:Connect(function()
                 if character and humanoidRootPart then
                     local nearestEnemy = findNearestEnemy()
@@ -362,8 +402,6 @@ AutoPlaySection:AddToggle("AutoFollowEnemy", {
                         local targetPos = enemyHRP.Position - Vector3.new(0, 7, 0)
                         local lookDir = Vector3.new(0, 1, 0)
                         character:PivotTo(CFrame.new(targetPos, targetPos + lookDir))
-                        camera.CameraSubject = humanoid
-                        camera.CameraType = Enum.CameraType.Custom
                     end
                 end
             end)
@@ -376,8 +414,7 @@ AutoPlaySection:AddToggle("AutoFollowEnemy", {
     end
 })
 
-
-
+-- ...existing code...
 
 -- ...existing code...
 
