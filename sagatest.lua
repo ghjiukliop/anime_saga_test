@@ -342,45 +342,40 @@ AutoPlaySection:AddToggle("AutoPlayToggle", {
 local RunService = game:GetService("RunService")
 local camera = workspace.CurrentCamera
 
-local autoFollowEnemy = false
+
+-- Auto Follow Enemy Toggle
+local autoFollowEnemy = ConfigSystem.CurrentConfig.AutoFollowEnemy
 local followConnection
-
-local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-local humanoid = character:WaitForChild("Humanoid")
-
-LocalPlayer.CharacterAdded:Connect(function(char)
-    character = char
-    humanoidRootPart = nil
-    repeat wait() until char:FindFirstChild("HumanoidRootPart")
-    humanoidRootPart = char.HumanoidRootPart
-    humanoid = char:WaitForChild("Humanoid")
-    camera.CameraSubject = humanoid
-    camera.CameraType = Enum.CameraType.Custom
-end)
-
-local function findNearestEnemy()
-    local mobsFolder = workspace:FindFirstChild("Enemy")
-    if not mobsFolder then return nil end
-    local mobs = mobsFolder:FindFirstChild("Mob")
-    if not mobs then return nil end
-
-    if not humanoidRootPart then return nil end
-
-    local nearestMob = nil
-    local nearestDistance = math.huge
-    for _, mob in pairs(mobs:GetChildren()) do
-        if mob:IsA("Model") and mob:FindFirstChild("HumanoidRootPart") then
-            local mobHRP = mob.HumanoidRootPart
-            local dist = (mobHRP.Position - humanoidRootPart.Position).Magnitude
-            if dist < nearestDistance then
-                nearestDistance = dist
-                nearestMob = mob
+AutoPlaySection:AddToggle("AutoFollowEnemy", {
+    Title = "Auto Follow Enemy",
+    Default = ConfigSystem.CurrentConfig.AutoFollowEnemy,
+    Callback = function(Value)
+        autoFollowEnemy = Value
+        ConfigSystem.CurrentConfig.AutoFollowEnemy = Value
+        ConfigSystem.SaveConfig()
+        if autoFollowEnemy then
+            followConnection = RunService.Heartbeat:Connect(function()
+                if character and humanoidRootPart then
+                    local nearestEnemy = findNearestEnemy()
+                    if nearestEnemy and nearestEnemy:FindFirstChild("HumanoidRootPart") then
+                        local enemyHRP = nearestEnemy.HumanoidRootPart
+                        local targetPos = enemyHRP.Position - Vector3.new(0, 7, 0)
+                        local lookDir = Vector3.new(0, 1, 0)
+                        character:PivotTo(CFrame.new(targetPos, targetPos + lookDir))
+                        camera.CameraSubject = humanoid
+                        camera.CameraType = Enum.CameraType.Custom
+                    end
+                end
+            end)
+        else
+            if followConnection then
+                followConnection:Disconnect()
+                followConnection = nil
             end
         end
     end
-    return nearestMob
-end
+})
+
 
 AutoPlaySection:AddToggle("AutoFollowEnemy", {
     Title = "Auto Follow Enemy",
@@ -414,196 +409,9 @@ AutoPlaySection:AddToggle("AutoFollowEnemy", {
 
 -- Auto Combat
 
-
-local autoCombat = false
+-- Auto Combat Toggle
+local autoCombat = ConfigSystem.CurrentConfig.AutoCombat
 local combatThread
-
-AutoPlaySection:AddToggle("AutoCombat", {
-    Title = "Auto Combat",
-    Default = false,
-    Callback = function(Value)
-        autoCombat = Value
-        if autoCombat then
-            combatThread = task.spawn(function()
-                repeat task.wait() until game:IsLoaded()
-                while autoCombat do
-                    local combatFunction = nil
-                    local env = getgc(true)
-                    for _, func in ipairs(env) do
-                        if typeof(func) == "function" and debug.getinfo(func).name == "Combat" then
-                            local constants = debug.getconstants(func)
-                            if table.find(constants, "Humanoid") and table.find(constants, "Slash") then
-                                combatFunction = func
-                                break
-                            end
-                        end
-                    end
-                    if combatFunction then
-                        pcall(combatFunction)
-                    end
-                    task.wait(0.2) -- tốc độ đánh, chỉnh nếu cần
-                end
-            end)
-        else
-            if combatThread then
-                task.cancel(combatThread)
-            end
-        end
-    end
-})
-
--- ...existing code...
-
--- ...existing code...
-
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
-function getPositionData()
-    local char = LocalPlayer.Character
-    local hrp = char and char:FindFirstChild("HumanoidRootPart")
-    if hrp then
-        return hrp.CFrame, hrp.Position
-    end
-    return nil, nil
-end
-
-
-AutoPlaySection:AddParagraph({
-    Title = "Auto Skill",
-    Content = "Auto use skills"
-
-})
-
-local autoSkill1 = false
-local skill1Thread
-AutoPlaySection:AddToggle("AutoSkill1", {
-    Title = "Auto Skill 1",
-    Default = false,
-    Callback = function(Value)
-        autoSkill1 = Value
-        if autoSkill1 then
-            skill1Thread = task.spawn(function()
-                while autoSkill1 do
-                    local cf, pos = getPositionData()
-                    if cf and pos then
-                        local args = {"Skill1", cf, pos, "OnSkill"}
-                        ReplicatedStorage.Events.Skill:FireServer(unpack(args))
-                    end
-                    task.wait(5) -- chỉnh thời gian theo cooldown thực tế
-                end
-            end)
-        else
-            if skill1Thread then
-                task.cancel(skill1Thread)
-            end
-        end
-    end
-})
-
--- Auto Skill 2
-local autoSkill2 = false
-local skill2Thread
-AutoPlaySection:AddToggle("AutoSkill2", {
-    Title = "Auto Skill 2",
-    Default = false,
-    Callback = function(Value)
-        autoSkill2 = Value
-        if autoSkill2 then
-            skill2Thread = task.spawn(function()
-                while autoSkill2 do
-                    local cf, pos = getPositionData()
-                    if cf and pos then
-                        local args = {"Skill2", cf, pos, "OnSkill"}
-                        ReplicatedStorage.Events.Skill:FireServer(unpack(args))
-                    end
-                    task.wait(7) -- chỉnh theo cooldown của Skill2
-                end
-            end)
-        else
-            if skill2Thread then
-                task.cancel(skill2Thread)
-            end
-        end
-    end
-})
-
--- Auto Skill 3
-local autoSkill3 = false
-local skill3Thread
-AutoPlaySection:AddToggle("AutoSkill3", {
-    Title = "Auto Skill 3",
-    Default = false,
-    Callback = function(Value)
-        autoSkill3 = Value
-        if autoSkill3 then
-            skill3Thread = task.spawn(function()
-                while autoSkill3 do
-                    local cf, pos = getPositionData()
-                    if cf and pos then
-                        local args = {"Skill3", cf, pos, "OnSkill"}
-                        ReplicatedStorage.Events.Skill:FireServer(unpack(args))
-                    end
-                    task.wait(10) -- chỉnh theo cooldown của Skill3
-                end
-            end)
-        else
-            if skill3Thread then
-                task.cancel(skill3Thread)
-            end
-        end
-    end
-})
-
-
-
--- load setting 
-AutoPlaySection:AddToggle("AutoPlayToggle", {
-    Title = "Bật Auto Play",
-    Default = ConfigSystem.CurrentConfig.AutoPlayEnabled,
-    Callback = function(Value)
-        autoPlayEnabled = Value
-        ConfigSystem.CurrentConfig.AutoPlayEnabled = Value
-        ConfigSystem.SaveConfig()
-        if autoPlayEnabled then
-            print("Auto Play đã bật!")
-        else
-            print("Auto Play đã tắt!")
-        end
-    end
-})
-
-AutoPlaySection:AddToggle("AutoFollowEnemy", {
-    Title = "Auto Follow Enemy",
-    Default = ConfigSystem.CurrentConfig.AutoFollowEnemy,
-    Callback = function(Value)
-        autoFollowEnemy = Value
-        ConfigSystem.CurrentConfig.AutoFollowEnemy = Value
-        ConfigSystem.SaveConfig()
-        if autoFollowEnemy then
-            followConnection = RunService.Heartbeat:Connect(function()
-                if character and humanoidRootPart then
-                    local nearestEnemy = findNearestEnemy()
-                    if nearestEnemy and nearestEnemy:FindFirstChild("HumanoidRootPart") then
-                        local enemyHRP = nearestEnemy.HumanoidRootPart
-                        local targetPos = enemyHRP.Position - Vector3.new(0, 7, 0)
-                        local lookDir = Vector3.new(0, 1, 0)
-                        character:PivotTo(CFrame.new(targetPos, targetPos + lookDir))
-                        camera.CameraSubject = humanoid
-                        camera.CameraType = Enum.CameraType.Custom
-                    end
-                end
-            end)
-        else
-            if followConnection then
-                followConnection:Disconnect()
-                followConnection = nil
-            end
-        end
-    end
-})
-
 AutoPlaySection:AddToggle("AutoCombat", {
     Title = "Auto Combat",
     Default = ConfigSystem.CurrentConfig.AutoCombat,
@@ -640,6 +448,33 @@ AutoPlaySection:AddToggle("AutoCombat", {
     end
 })
 
+-- ...existing code...
+
+-- ...existing code...
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+function getPositionData()
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        return hrp.CFrame, hrp.Position
+    end
+    return nil, nil
+end
+
+
+AutoPlaySection:AddParagraph({
+    Title = "Auto Skill",
+    Content = "Auto use skills"
+
+})
+
+-- Auto Skill 1 Toggle
+local autoSkill1 = ConfigSystem.CurrentConfig.AutoSkill1
+local skill1Thread
 AutoPlaySection:AddToggle("AutoSkill1", {
     Title = "Auto Skill 1",
     Default = ConfigSystem.CurrentConfig.AutoSkill1,
@@ -666,6 +501,9 @@ AutoPlaySection:AddToggle("AutoSkill1", {
     end
 })
 
+-- Auto Skill 2 Toggle
+local autoSkill2 = ConfigSystem.CurrentConfig.AutoSkill2
+local skill2Thread
 AutoPlaySection:AddToggle("AutoSkill2", {
     Title = "Auto Skill 2",
     Default = ConfigSystem.CurrentConfig.AutoSkill2,
@@ -691,7 +529,9 @@ AutoPlaySection:AddToggle("AutoSkill2", {
         end
     end
 })
-
+-- Auto Skill 3 Toggle
+local autoSkill3 = ConfigSystem.CurrentConfig.AutoSkill3
+local skill3Thread
 AutoPlaySection:AddToggle("AutoSkill3", {
     Title = "Auto Skill 3",
     Default = ConfigSystem.CurrentConfig.AutoSkill3,
@@ -717,6 +557,7 @@ AutoPlaySection:AddToggle("AutoSkill3", {
         end
     end
 })
+
 
 AutoPlaySection:AddParagraph({
     Title = "Hướng dẫn",
