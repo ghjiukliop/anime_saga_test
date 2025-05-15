@@ -334,6 +334,54 @@ AutoPlaySection:AddToggle("AutoPlayToggle", {
 
 -- ...existing code...
 
+-- Auto Combat
+local autoCombat = false
+local combatThread
+
+AutoPlaySection:AddToggle("AutoCombat", {
+    Title = "Auto Combat",
+    Default = false,
+    Callback = function(Value)
+        autoCombat = Value
+        if autoCombat then
+            combatThread = task.spawn(function()
+                repeat task.wait() until game:IsLoaded()
+                repeat task.wait() until game.Players.LocalPlayer.Character
+
+                -- Lấy Combat function từ môi trường hiện tại
+                local env = getgc(true)
+                local combatFunction = nil
+
+                for _, func in ipairs(env) do
+                    if typeof(func) == "function" and debug.getinfo(func).name == "Combat" then
+                        local constants = debug.getconstants(func)
+                        if table.find(constants, "Humanoid") and table.find(constants, "Slash") then
+                            combatFunction = func
+                            break
+                        end
+                    end
+                end
+
+                -- Nếu tìm được Combat function thì loop gọi
+                if combatFunction then
+                    while autoCombat do
+                        task.wait(0.5)
+                        pcall(combatFunction)
+                    end
+                else
+                    warn("Không tìm thấy hàm Combat() trong môi trường game.")
+                end
+            end)
+        else
+            if combatThread then
+                task.cancel(combatThread)
+            end
+        end
+    end
+})
+
+
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -346,6 +394,7 @@ function getPositionData()
     end
     return nil, nil
 end
+
 
 -- Auto Skill 1
 local autoSkill1 = false
@@ -428,7 +477,7 @@ AutoPlaySection:AddToggle("AutoSkill3", {
     end
 })
 
--- ...existing code...
+
 
 
 
