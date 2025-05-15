@@ -332,6 +332,106 @@ AutoPlaySection:AddToggle("AutoPlayToggle", {
     end
 })
 
+-- ...existing code...
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+function getPositionData()
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        return hrp.CFrame, hrp.Position
+    end
+    return nil, nil
+end
+
+-- Auto Skill 1
+local autoSkill1 = false
+local skill1Thread
+AutoPlaySection:AddToggle("AutoSkill1", {
+    Title = "Auto Skill 1",
+    Default = false,
+    Callback = function(Value)
+        autoSkill1 = Value
+        if autoSkill1 then
+            skill1Thread = task.spawn(function()
+                while autoSkill1 do
+                    local cf, pos = getPositionData()
+                    if cf and pos then
+                        local args = {"Skill1", cf, pos, "OnSkill"}
+                        ReplicatedStorage.Events.Skill:FireServer(unpack(args))
+                    end
+                    task.wait(5) -- chỉnh thời gian theo cooldown thực tế
+                end
+            end)
+        else
+            if skill1Thread then
+                task.cancel(skill1Thread)
+            end
+        end
+    end
+})
+
+-- Auto Skill 2
+local autoSkill2 = false
+local skill2Thread
+AutoPlaySection:AddToggle("AutoSkill2", {
+    Title = "Auto Skill 2",
+    Default = false,
+    Callback = function(Value)
+        autoSkill2 = Value
+        if autoSkill2 then
+            skill2Thread = task.spawn(function()
+                while autoSkill2 do
+                    local cf, pos = getPositionData()
+                    if cf and pos then
+                        local args = {"Skill2", cf, pos, "OnSkill"}
+                        ReplicatedStorage.Events.Skill:FireServer(unpack(args))
+                    end
+                    task.wait(7) -- chỉnh theo cooldown của Skill2
+                end
+            end)
+        else
+            if skill2Thread then
+                task.cancel(skill2Thread)
+            end
+        end
+    end
+})
+
+-- Auto Skill 3
+local autoSkill3 = false
+local skill3Thread
+AutoPlaySection:AddToggle("AutoSkill3", {
+    Title = "Auto Skill 3",
+    Default = false,
+    Callback = function(Value)
+        autoSkill3 = Value
+        if autoSkill3 then
+            skill3Thread = task.spawn(function()
+                while autoSkill3 do
+                    local cf, pos = getPositionData()
+                    if cf and pos then
+                        local args = {"Skill3", cf, pos, "OnSkill"}
+                        ReplicatedStorage.Events.Skill:FireServer(unpack(args))
+                    end
+                    task.wait(10) -- chỉnh theo cooldown của Skill3
+                end
+            end)
+        else
+            if skill3Thread then
+                task.cancel(skill3Thread)
+            end
+        end
+    end
+})
+
+-- ...existing code...
+
+
+
 AutoPlaySection:AddParagraph({
     Title = "Hướng dẫn",
     Content = "Bật tính năng Auto Play để tự động thực hiện các thao tác trong game."
